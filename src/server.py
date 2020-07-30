@@ -4,6 +4,14 @@ import csv
 from flask import Flask, render_template, request
 from werkzeug.utils import secure_filename
 
+
+def read_csv(file):
+  filename = secure_filename(file.filename)
+  fstring = file.read()
+  csv_dicts = [{k: v for k, v in row.items()} for row in csv.DictReader(fstring.splitlines(), skipinitialspace=True)]
+  return csv_dicts
+
+
 # instancia del objeto Flask
 app = Flask(__name__)
 
@@ -29,14 +37,21 @@ def program_open():
 @app.route("/upload", methods=['POST'])
 def uploader():
   if request.method == 'POST':
-    direc = request.json['user']
-    session_file = request.json['file_path']
+    direc = request.form['user']
     # obtenemos el archivo del input "archivo"
-    f = request.files['archivo']
+    session_file = request.files['file_path']
     
-    dict_data = read_csv(f)
+    ############# TO FIX
 
-    with open(session_file,'a') as fd:
+    filename = secure_filename(session_file.filename)
+    fstring = session_file.read()
+    print("--------------------->>>>>>>>>>>>>",fstring)
+    csv_dicts = []
+    print("--------------------->>>>>>>>>>>>>",csv_dicts)
+    dict_data = csv_dicts
+    os.chdir(os.path.join('sessions',direc))
+    file_path = os.path.join(os.getcwd(),'sessions',direc,direc,'.csv')
+    with open(file_path,'a') as fd:
       fields = ['key','p_down','p_up']
       writer = csv.DictWriter(fd, fieldnames=fields)
       for row in dict_data:
@@ -49,9 +64,3 @@ if __name__ == '__main__':
 
 
 
-
- def read_csv(file):
-    filename = secure_filename(file.filename)
-    fstring = file.read()
-    csv_dicts = [{k: v for k, v in row.items()} for row in csv.DictReader(fstring.splitlines(), skipinitialspace=True)]
-    return csv_dicts
