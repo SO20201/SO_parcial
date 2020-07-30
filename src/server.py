@@ -15,11 +15,11 @@ def upload_file():
 @app.route("/session",methods=['POST'])
 def program_open():
   directoty = request.json['user'] + request.json['time']
-  path = os.path.join(os.getcwd(),directoty)
+  path = os.path.join(os.getcwd(),'sessions',directoty)
   os.mkdir(path)
-  os.chdir(path)
+  os.chdir(os.path.join('sessions',directoty))
   session_file = directoty + '.csv'
-  
+
   with open(session_file,'w') as fd:
     write_header = csv.writer(fd, delimiter = ',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
     write_header.writerow(['key','p_down','p_up'])
