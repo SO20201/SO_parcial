@@ -17,26 +17,41 @@ def program_open():
   directoty = request.json['user'] + request.json['time']
   path = os.path.join(os.getcwd(),directoty)
   os.mkdir(path)
-  return "Directory created"
+  os.chdir(path)
+  session_file = directoty + '.csv'
+  
+  with open(session_file,'w') as fd:
+    write_header = csv.writer(fd, delimiter = ',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    write_header.writerow(['key','p_down','p_up'])
+  return "Directory and file created"
 
 
 @app.route("/upload", methods=['POST'])
 def uploader():
   if request.method == 'POST':
     direc = request.json['user']
-
+    session_file = request.json['file_path']
     # obtenemos el archivo del input "archivo"
     f = request.files['archivo']
-    filename = secure_filename(f.filename)
-
-    fstring = f.read()
-
-    csv_dicts = [{k: v for k, v in row.items()} for row in csv.DictReader(fstring.splitlines(), skipinitialspace=True)]
     
-    
+    dict_data = read_csv(f)
 
-    return "<h1>Archivo subido exitosamente</h1>"
+    with open(session_file,'a') as fd:
+      fields = ['key','p_down','p_up']
+      writer = csv.DictWriter(fd, fieldnames=fields)
+      for row in dict_data:
+        writer.writerow(row)
+    return "Uploaded"
 
 if __name__ == '__main__':
  # Iniciamos la aplicación
  app.run(debug=True)
+
+
+
+
+ def read_csv(file):
+    filename = secure_filename(file.filename)
+    fstring = file.read()
+    csv_dicts = [{k: v for k, v in row.items()} for row in csv.DictReader(fstring.splitlines(), skipinitialspace=True)]
+    return csv_dicts
