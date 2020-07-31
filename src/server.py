@@ -1,8 +1,10 @@
 # Importamos todo lo necesario
 import os
 import csv
-from flask import Flask, render_template, request,jsonify
+from datetime import datetime
+from flask import Flask, request,jsonify
 from werkzeug.utils import secure_filename
+from utils import generate_histograma
 
 
 # instancia del objeto Flask
@@ -67,9 +69,45 @@ def uploader():
     return "Uploaded"
     
 
+@app.route("/end", methods=['POST'])
+def end_session():
+  if request.method == 'POST':
+    user = request.json['user']
+    os.chdir(os.path.join(os.getcwd(),'sessions',user))
+    file_path = user + '.csv'
+    key_dur = list()
+    lis_hist = list()
+
+    with open(file_path,'r') as fd:
+      reader = csv.DictReader(fd)
+      
+      # Calcular la duracion de cada tecla presionada
+      for row in reader:
+        start = datetime.strptime(row['p_down'],'%Y-%m-%d %H:%M:%S.%f')
+        end = datetime.strptime(row['p_up'],'%Y-%m-%d %H:%M:%S.%f')
+        duracion = end - start
+        tupp = [row['key'],duracion.total_seconds()*1000]
+        key_dur.append(tupp)
+    
+    items = list(set([x[0] for x in key_dur]))
+    
+    lis_hist = [[i,0] for i in items]
+    # Calcular la duracion total sumada de cada caracter
+    for i in range(len(items)):
+      for j in key_dur:
+        if j[0]==items[i]:
+          lis_hist[i][1] += j[1]
+
+    generate_histograma(lis_hist,user)
+
+
+    os.chdir("../../")
+    return "Session finished"
+
+
 if __name__ == '__main__':
- # Iniciamos la aplicación
- app.run(debug=True)
+  # Iniciamos la aplicación
+  app.run(debug=True)
 
 
 
