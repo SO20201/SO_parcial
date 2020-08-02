@@ -2,9 +2,9 @@
 import os
 import csv
 from datetime import datetime
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from werkzeug.utils import secure_filename
-from utils import generate_histograma
+from utils import generate_histograma, guardarCaracteristicas
 
 
 # instancia del objeto Flask
@@ -93,7 +93,7 @@ def end_session():
         duracion = end - start
         tupp = [row['key'],duracion.total_seconds()*1000]
         key_dur.append(tupp)
-    
+    # Comment
     items = list(set([x[0] for x in key_dur]))
     
     lis_hist = [[i,0] for i in items]
@@ -105,13 +105,33 @@ def end_session():
 
     generate_histograma(lis_hist,user)
 
-
     os.chdir("../../")
     return "Session finished"
 
 
+@app.route("/histograma", methods=['GET'])
+def show_histogram():
+  if request.method == 'GET':
+    user = request.args.get('user')
+    url_histograma = '{}/resultado.png'.format(user)
+    return render_template('histograma.html',img_url = user,user=user[:-14])
+
+@app.route("/<imgname>", methods=['GET'])
+def send_img(imgname):
+  if request.method == 'GET':
+    path_aux = imgname
+    print(path_aux)
+    return send_from_directory('sessions/'+path_aux,'resultado.png')
+
 if __name__ == '__main__':
   # Iniciamos la aplicación
+  if(not os.path.exists('sessions')):
+    os.mkdir('sessions')
+
+  # guardarCaracteristicas()
+
+
+
   app.run(debug=True)
 
 

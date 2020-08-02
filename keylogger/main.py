@@ -3,7 +3,6 @@ from pynput.keyboard import Listener
 import time
 import platform as pl
 import requests as req
-import signal
 import csv
 import json
 import os
