@@ -9,22 +9,62 @@ import json
 import os
 import shutil
 import atexit
+import webbrowser
+import random
+from threading import Timer
+
+user_agent_list = [
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.1 Safari/605.1.15',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:77.0) Gecko/20100101 Firefox/77.0',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:77.0) Gecko/20100101 Firefox/77.0',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36',
+]
+
+url_server = 'https://server-key.herokuapp.com'
+# url_server = 'http://127.0.0.1:5000'
 
 def exit_handler():
 	global user_dir
 	file_name = user_dir.text
-	req.post('http://127.0.0.1:5000/end',json={'user':file_name})
+	user_agent = random.choice(user_agent_list)
+	aux = req.post(url_server+'/end',json={'user':file_name},headers={"User-Agent":user_agent})
+	print('**********************> Respuesta salida: ',aux)
+	url_userdata = url_server + '/histograma?user=' + file_name
+	shutil.rmtree('user_characteristics',ignore_errors=True)
+	webbrowser.open(url_userdata)
 atexit.register(exit_handler)
 
 
 milista=[]
-tiempo_espera=4
+tiempo_espera=5
 #global hora_envio
 #hora_actual = time.time()
 #hora_envio= hora_actual + tiempo_espera
 
+#Clase para definir temporizadores que toman el tiempo de espera
+class RepeatingTimer(object):
+    def __init__(self, interval, f,args=[],kwargs={}):
+        self.interval = interval
+        self.f = f
+        self.timer = None
+
+    def callback(self):
+        self.f()
+
+    def cancel(self):
+        self.timer.cancel()
+
+    def start(self):
+        self.timer = Timer(self.interval, self.callback)
+        self.timer.start()
+
+    def reset(self):
+        self.cancel()
+        self.start()
+
 #Envio de datos a la nube
-def enviarDatos(signal,frame):
+def enviarDatos():
 	global milista
 	global user_dir
 	shutil.rmtree('user_characteristics',ignore_errors=True)
@@ -37,19 +77,19 @@ def enviarDatos(signal,frame):
 
 	file_path = os.path.join('user_characteristics', file_name+'.csv')
 	file_keys = {'file_path': open(file_path,'rb')}
-	req.post('http://127.0.0.1:5000/upload',files = file_keys)
+	req.post(url_server+'/upload',files = file_keys)
 	#with open(archivo,'w') as fd:
 		#writer = csv.writer(fd,delimiter=',')
 		#for row in milista:
 			#print(row)
 			#writer.writerow(row)
-
+	print('------------> Data sended')
 	milista=[]
 	
-	
+alarm = RepeatingTimer(tiempo_espera,enviarDatos)
 
 
-signal.signal(signal.SIGALRM, enviarDatos)
+#signal.signal(signal.SIGALRM, enviarDatos)
 
 #Agregar if para linux y solo mostrar info adecuada
 def guardarCaracteristicas():
@@ -69,6 +109,10 @@ def guardarCaracteristicas():
 	'version',
 	]
 	listaCaracteristicas=[]
+
+	if(not os.path.exists('user_characteristics')):
+    	os.mkdir('sessuser_characteristicsions')
+
 	for perfil in perfil_so:
 		if(hasattr(pl,perfil)):
 			listaCaracteristicas.append([perfil,getattr(pl,perfil)()])
@@ -121,33 +165,23 @@ def normalizarMantenerPresionado(a):
 def RecibirDatos(key):
 	global milista
 	m=datetime.datetime.now()
-  	#global hora_envio
-	global mi_temporizador
 	milista.append([key,str(m)])
     
-  #if esTiempoDeEnviar():
-    #enviarDatos(milista)
-    #milista=[]
-    #hora_envio = time.time() + tiempo_espera
 
 #Funcion que se le asigna al listener para conocer cuando se deja de presionar una tecla 
 def DejarDePresionar(key):
 	global milista
 	milista[len(milista)-1].append(str(datetime.datetime.now()))
-	milista=normalizarMantenerPresionado(milista[:])
-	milista=normalizarMayusculas(milista[:])
-	global mi_temporizador
+	milista = normalizarMantenerPresionado(milista[:])
+	milista = normalizarMayusculas(milista[:])
+	global alarm
+	if(len(milista)==1):
+		alarm.start()
+	elif(len(milista)>1):
+		alarm.reset()
+	#signal.alarm(tiempo_espera)
 	print(milista)
-	signal.alarm(tiempo_espera)
   
-
-#Funcion que nos permite contabilizar cada 10 segundos despues de haber sido presionada la ultima tecla, enviar a la Nube 
-def esTiempoDeEnviar():
-	global hora_envio
-	if time.time() > hora_envio:
-		return True
-	else:
-		return False
 
 if __name__ == "__main__":
 	# Inicio del programa
@@ -158,8 +192,8 @@ if __name__ == "__main__":
 	file_os = {'file': open(user_file,'rb')}
 
 	global user_dir
-	user_dir = req.post('http://127.0.0.1:5000/session',files=file_os)
-
+	user_dir = req.post(url_server+'/session',files=file_os)
+	print('------------> ',user_dir.text)
 	with Listener(on_press=RecibirDatos, on_release=DejarDePresionar) as l:
 		l.join()
 
