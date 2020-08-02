@@ -2,7 +2,7 @@
 import os
 import csv
 from datetime import datetime
-from flask import Flask, request,jsonify
+from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 from utils import generate_histograma
 
@@ -12,8 +12,8 @@ app = Flask(__name__)
 
 
 
-@app.route("/",methods=['GET'])
-def upload_file():
+@app.route("/")
+def home():
   # renderiamos la plantilla "formulario.html"
   return "Welcome"
 
@@ -22,13 +22,17 @@ def upload_file():
 @app.route("/session",methods=['POST'])
 def program_open():
   # Generamos el nombre de la carpeta de sesion
-  directory = request.json['user'] + request.json['time']
-  path = os.path.join(os.getcwd(),'sessions',directory)
+  os_char = request.files['file']
+  os_char_file = secure_filename(os_char.filename)
+  os_char_file = os_char_file[:-4]
+  path = os.path.join(os.getcwd(),'sessions',os_char_file)
   # Creamos el directorio de la sesion
   os.mkdir(path)
-  os.chdir(os.path.join('sessions',directory))
+  os.chdir(os.path.join('sessions',os_char_file))
+
+  os_char.save('user_characteristicas.txt')
   # Generamos el nombre del archivo csv de los datos
-  session_file = directory + '.csv'
+  session_file = os_char_file + '.csv'
 
   with open(session_file,'w') as fd:
     # Escribimos la cabecera del archivo 
@@ -36,26 +40,27 @@ def program_open():
     write_header.writerow(['key','p_down','p_up'])
 
   os.chdir('../../')
+  
   # Retornamos al usuario el nombre de su directorio 
-  return jsonify({"user-session":directory})
+  return os_char_file
 
 
 
 @app.route("/upload", methods=['POST'])
 def uploader():
   if request.method == 'POST':
-    direc = request.form['user']
     # obtenemos el archivo del input "archivo"
     session_file = request.files['file_path']
-    # Obtenemos el nombre del archivo de sesion
-    file_name = direc + '.csv'
+    direc = secure_filename(session_file.filename)
     
+    # Obtenemos el nombre del archivo de sesion
     # Leemos el archivo recibido y lo descomponemos las lineas en listas
     fstring = session_file.read()
     csv_list = [row for row in fstring.splitlines()]
 
-    os.chdir(os.path.join('sessions',direc))
+    os.chdir(os.path.join('sessions',direc[:-4]))
     
+    file_name = direc
     with open(file_name,'a') as fd:
       writer = csv.writer(fd,delimiter=',',)
       for row in csv_list:
