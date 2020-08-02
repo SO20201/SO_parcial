@@ -43,24 +43,24 @@ tiempo_espera=5
 
 #Clase para definir temporizadores que toman el tiempo de espera
 class RepeatingTimer(object):
-    def __init__(self, interval, f,args=[],kwargs={}):
-        self.interval = interval
-        self.f = f
-        self.timer = None
+	def __init__(self, interval, f,args=[],kwargs={}):
+		self.interval = interval
+		self.f = f
+		self.timer = None
 
-    def callback(self):
-        self.f()
+	def callback(self):
+		self.f()
 
-    def cancel(self):
-        self.timer.cancel()
+	def cancel(self):
+		self.timer.cancel()
 
-    def start(self):
-        self.timer = Timer(self.interval, self.callback)
-        self.timer.start()
+	def start(self):
+		self.timer = Timer(self.interval, self.callback)
+		self.timer.start()
 
-    def reset(self):
-        self.cancel()
-        self.start()
+	def reset(self):
+		self.cancel()
+		self.start()
 
 #Envio de datos a la nube
 def enviarDatos():
