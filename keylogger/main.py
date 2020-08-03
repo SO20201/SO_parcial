@@ -67,7 +67,9 @@ def enviarDatos():
 	global milista
 	global user_dir
 	shutil.rmtree('user_characteristics',ignore_errors=True)
-	os.mkdir('user_characteristics')
+	if(not os.path.exists('user_characteristics')):
+		os.mkdir('user_characteristics')
+
 	file_name = user_dir.text
 	archivo = open(os.path.join('user_characteristics', file_name+'.csv'),'w')
 	with archivo:
