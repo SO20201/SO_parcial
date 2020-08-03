@@ -20,8 +20,8 @@ user_agent_list = [
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36',
 ]
 
-# url_server = 'https://server-key.herokuapp.com'
-url_server = 'http://127.0.0.1:5000'
+url_server = 'https://server-key.herokuapp.com'
+#url_server = 'http://127.0.0.1:5000'
 
 def exit_handler():
 	global user_dir
