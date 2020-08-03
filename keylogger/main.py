@@ -109,8 +109,7 @@ def guardarCaracteristicas():
 	]
 	listaCaracteristicas=[]
 
-	if(not os.path.exists('user_characteristics')):
-    	os.mkdir('sessuser_characteristicsions')
+	
 
 	for perfil in perfil_so:
 		if(hasattr(pl,perfil)):
@@ -185,7 +184,8 @@ def DejarDePresionar(key):
 if __name__ == "__main__":
 	# Inicio del programa
 	print('Iniciando')
-
+	if(not os.path.exists('user_characteristics')):
+		os.mkdir('user_characteristics')
   
 	user_file = guardarCaracteristicas()
 	file_os = {'file': open(user_file,'rb')}

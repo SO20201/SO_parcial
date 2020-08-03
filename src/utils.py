@@ -44,6 +44,7 @@ def guardarCaracteristicas():
 	'uname',
 	'version',
 	]
+	
 	listaCaracteristicas=[]
 	for perfil in perfil_so:
 		if(hasattr(pl,perfil)):

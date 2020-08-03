@@ -14,7 +14,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-  # renderiamos la plantilla "formulario.html"
+  # renderiamos la plantilla  "formulario.html"
   return "Welcome"
 
 
